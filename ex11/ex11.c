@@ -6,6 +6,11 @@ int main()
 	// char name[4] = { 'a', 'b', 'c', 'd', 'e' }; // This results in weird errors
 	char name[4] = { 'a' };
 
+	// This does NOT result in compiler warnings... chars and ints are the same,
+	// except chars are smaller
+	// int numbers[4] = { 'a', 'b', 'c', 'd' };
+	// char name[4] = { 1, 2, 3, 4 };
+
 	// Print them out raw
 	printf("numbers: %d %d %d %d\n",
 		    numbers[0], numbers[1], numbers[2], numbers[3]);
@@ -48,4 +53,20 @@ int main()
 
 	printf("another each: %c %c %c %c\n",
 		    another[0], another[1], another[2], another[3]);
+
+	// This totally works???
+	another = "Hihello\n";
+	printf("%s", another);
+
+	// Initially thought the below line was read only, but apparently not
+	char string[] = "Hello";
+	printf("%s\n", string);
+	string[0] = 'A';
+	printf("%s\n", string);
+
+	// 
+	char word[3] = "Hello";
+	printf("%s\n", word);
+	word[0] = 'A';
+	printf("%s\n", word);
 }
