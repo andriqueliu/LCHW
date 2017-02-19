@@ -40,10 +40,17 @@ int main(int argc, char *argv[])
 	printf("%s\n", argv[0]);
 
 	// This also works???
+	// Assigning one char * to another char *???
 	if (argc > 1) {
 		states[0] = argv[1];
 	}
 	printf("%s\n", states[0]);
+
+	// !!! So assigning char * to each other works...
+	char *ha = "ha";
+	char *hee = "hee";
+	ha = hee;
+	printf("%s\n", ha);
 
 	return 0;
 }
