@@ -15,6 +15,12 @@ int main()
 	// The full_name method and the name methods are identical, behaviorally
 	// char full_name[] = {
 
+	// Normal
+	// areas[0] = 100;
+
+	// Still... normal?
+	// areas[0] = name[0];
+
 	// }
 
 	printf("The size of an int: %ld\n", sizeof(int));
@@ -32,4 +38,10 @@ int main()
 	// the null char
 	// name[3] = '\0';
 	// printf("name: %s\n", name);
+
+	// Break: Print OOB areas
+	// Note: Print out garbage results
+	printf("Test: %d\n", areas[100]);
+
+
 }
