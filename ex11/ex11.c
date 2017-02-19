@@ -62,11 +62,22 @@ int main()
 	char string[] = "Hello";
 	printf("%s\n", string);
 	string[0] = 'A';
+	// string = "Hellohi!";
 	printf("%s\n", string);
 
-	// 
-	char word[3] = "Hello";
-	printf("%s\n", word);
-	word[0] = 'A';
-	printf("%s\n", word);
+	// Too long warning
+	// char word[3] = "Hello";
+	// printf("%s\n", word);
+	// word[0] = 'A';
+	// printf("%s\n", word);
+
+	// Results in seg fault
+	// char *yo = "Yo!";
+	// yo[1] = '1';
+	// printf("%s\n", yo);
+
+	// This totally works 0.o
+	char *yi = "Yi!";
+	yi = "Yeehaw!";
+	printf("%s\n", yi);
 }
