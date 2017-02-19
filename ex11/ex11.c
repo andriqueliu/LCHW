@@ -80,4 +80,6 @@ int main()
 	char *yi = "Yi!";
 	yi = "Yeehaw!";
 	printf("%s\n", yi);
+
+	// Note: need to find out how to manipulate a char pointer... individual chars
 }
