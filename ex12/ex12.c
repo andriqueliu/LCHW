@@ -25,5 +25,11 @@ int main()
 
 	printf("name: %s\n", name);
 
-	
+	// Break name messing w/ null char
+	// Note: C lets you mess around w/ memory... you can change up stuff outside
+	// of this array... like access name[1000]
+	// Note: If you assign the null char earlier, printf keeps printing until it encounters
+	// the null char
+	// name[3] = '\0';
+	// printf("name: %s\n", name);
 }
