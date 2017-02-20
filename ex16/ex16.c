@@ -14,11 +14,14 @@ struct Person {
 	int age;
 	int height;
 	int weight;
-}
+};
 
 struct Person *Person_create(char *name, int age, int height, int weight)
 {
+	// Note!!! malloc syntax... usage...
+	// ...
 	struct Person *who = malloc(sizeof(struct Person));
+	// Note: You are asserting that the *POINTER* is not NULL. 
 	assert(who != NULL);
 
 	who->name = strdup(name);
@@ -47,5 +50,14 @@ void Person_print(struct Person *who)
 
 int main(int argc, char *argv[])
 {
-	
+	// Make two people structs
+	// Note that you are creating pointers to structs here...
+	// But the function Person_create is allocating memory for those structs.
+	struct Person *joe = Person_create("Joe Alex", 32, 64, 140);
+
+	struct Person *frank = Person_create("Frank Blank", 20, 72, 180);
+
+	// Print them out and where they are in memory
+	printf("Joe is at memory location %p\n", joe);
+	Person_print(joe);
 }
