@@ -45,6 +45,12 @@ int main(int argc, char *argv[])
 	// }
 
 	// Break: Rewrite loops so that they start at the END of arrays and then go back
+	// It works!
+	i = count - 1;
+	while (i > -1) {
+		printf("%s has %d years alive.\n", names[i], ages[i]);
+		i--;
+	}
 
 	printf("---\n");
 
