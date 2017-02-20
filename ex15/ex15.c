@@ -24,12 +24,15 @@ You can use [] with a pointer, you can also use pointer arithmetic with an array
 */
 #include <stdio.h>
 
+void print_with_ptrs(char **names, int count);
+
 int main(int argc, char *argv[])
 {
 	// Create two arrays we care about
 	// Note: so, ages on its own is just an address of where its elements start!
 	// AKA, it's the address of the array's first entry!
 	int ages[] = { 23, 43, 12, 89, 2 };
+
 	char *names[] = {
 		"Alan", "Frank",
 		"Mary", "John", "Lisa"
@@ -98,4 +101,28 @@ int main(int argc, char *argv[])
 	// 	(cur_age - ages) < count; cur_name++, cur_age++) {
 	// 	printf("%s lived %d years so far.\n", **cur_name, *cur_age);
 	// }
+
+	// EC: Print out addresses of pointers... use %p
+	// Note: %p prints out the pointer... which is just an address...!!!
+	cur_name = names;
+	cur_age = ages;
+	for (i = 0; i < count; i++) {
+		printf("Address of %s is %p.\n", *(cur_name + i), (cur_name + i));
+		printf("Address of %d is %p.\n", *(cur_age + i), (cur_age + i));
+	}
+
+	// Reset name pointer's place
+	cur_name = names;
+	print_with_ptrs(cur_name, count);
+}
+
+// EC: Write another way to use a function to print out data using pointers...
+// Remember: Functions can accept pointers, and you just use them like arrays
+void print_with_ptrs(char **names, int count)
+{
+	int i = 0;
+
+	for (i = 0; i < count; i++) {
+		printf("This name is: %s.\n", *(names + i));
+	}
 }
