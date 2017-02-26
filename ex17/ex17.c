@@ -23,6 +23,8 @@ Lots more details...
 #define MAX_DATA 512
 #define MAX_ROWS 100
 
+// An Address holds data about someone:
+// 
 struct Address {
 	int id;
 	int set;
@@ -30,17 +32,21 @@ struct Address {
 	char email[MAX_DATA];
 };
 
+// A Database holds an array of fixed length of Addresses 
 struct Database {
 	struct Address rows[MAX_ROWS];
 };
 
+// A Connection holds information about a file and its corresponding Database.
 struct Connection {
 	FILE *file;
 	struct Database *db;
 };
 
+// die is used to 
 void die(const char *message)
 {
+	// 
 	if (errno) {
 		perror(message);
 	} else {
@@ -50,19 +56,25 @@ void die(const char *message)
 	exit(1);
 }
 
+// Address_print prints out an Address entry's id, name, and email address.
 void Address_print(struct Address *addr)
 {
-	printf("%d %s %s\n", addr->id, addr->name, addr-> email);
+	printf("%d %s %s\n", addr->id, addr->name, addr->email);
 }
 
+// Database_load 
 void Database_load(struct Connection *conn)
 {
+	// 
 	int rc = fread(conn->db, sizeof(struct Database), 1, conn->file);
 	if (rc != 1) {
 		die("Failed to load database.");
 	}
 }
 
+// Database_open creates a Connection, and also checks for errors in this process.
+// 
+// Returns a pointer to a Connection
 struct Connection *Database_open(const char *filename, char mode)
 {
 	struct Connection *conn = malloc(sizeof(struct Connection));
@@ -76,9 +88,9 @@ struct Connection *Database_open(const char *filename, char mode)
 	}
 
 	if (mode == 'c') {
-		conn->file = fopen(filename, "w");
+		conn->file = fopen(filename, "w"); // 
 	} else {
-		conn->file = fopen(filename, "r+");
+		conn->file = fopen(filename, "r+"); // 
 
 		if (conn->file) {
 			Database_load(conn);
@@ -145,6 +157,11 @@ void Database_set(struct Connection *conn, int id, const char *name, const char 
 	// Demonstrate the strncpy bug
 	if (!res) {
 		die("Email copy failed.");
+	}
+
+	res = strncpy(addr->email, email, MAX_DATA);
+	if (!res) {
+		die("Email copy failed");
 	}
 }
 
