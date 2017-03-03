@@ -216,7 +216,7 @@ void Database_delete(struct Connection *conn, int id)
 	conn->db->rows[id] = addr; // Again, assigning a struct to a struct
 }
 
-// 
+// Database_list lists the set Addresses in a Database found in conn.
 void Database_list(struct Connection *conn)
 {
 	int i = 0;
