@@ -10,6 +10,13 @@ Else, if you need something around only for a little bit and need it really fast
 go stack. 
 
 Lots more details...
+
+Note: streams found in files
+
+Note: Check for null pointers/etc. by using if (!ptr), etc.
+
+Note: This program creates a file, from which Databases of user-defined information
+(in this case Address structs) can be stored and accessed 
 */
 
 // ??? Arrays passed... by value? by reference?
@@ -24,7 +31,8 @@ Lots more details...
 #define MAX_ROWS 100
 
 // An Address holds data about someone:
-// 
+// Location in the Database, whether their profile is "set," their name,
+// and their email address. 
 struct Address {
 	int id;
 	int set;
@@ -32,7 +40,7 @@ struct Address {
 	char email[MAX_DATA];
 };
 
-// A Database holds an array of fixed length of Addresses 
+// A Database holds an array of fixed length of Addresses.
 struct Database {
 	struct Address rows[MAX_ROWS];
 };
@@ -43,52 +51,62 @@ struct Connection {
 	struct Database *db;
 };
 
-// die is used to 
+// die is used to kill the program if there is anything wrong
 void die(const char *message)
 {
-	// 
+	// When you have an error return from a function, it will usually set an external var.
+	// errno. Here, you see if errno is set, and perror the error message if it is set.
 	if (errno) {
 		perror(message);
 	} else {
 		printf("ERROR: %s\n", message);
 	}
 
-	exit(1);
+	exit(1); // Exit the program
 }
 
 // Address_print prints out an Address entry's id, name, and email address.
+// Inputs:
+// struct Address pointer, used to access struct's information
 void Address_print(struct Address *addr)
 {
 	printf("%d %s %s\n", addr->id, addr->name, addr->email);
 }
 
-// Database_load 
+// Database_load loads a Database.
+// 
 void Database_load(struct Connection *conn)
 {
-	// 
+	// fread reads (3) items of data, each of size (2), from the stream pointed to by (4),
+	// and stores them into the location given by (1)
 	int rc = fread(conn->db, sizeof(struct Database), 1, conn->file);
 	if (rc != 1) {
 		die("Failed to load database.");
 	}
 }
 
-// Database_open creates a Connection, and also checks for errors in this process.
+// Database_open creates a new Connection to a new Database, and also checks for errors
+// in this process.
+// This function allows the user to define their desired mode: 
 // 
 // Returns a pointer to a Connection
 struct Connection *Database_open(const char *filename, char mode)
 {
+	// Create Connection pointer, points to a new Connection
 	struct Connection *conn = malloc(sizeof(struct Connection));
 	if (!conn) {
 		die("Memory error.");
 	}
 
+	// conn's db will point to a new Database
 	conn->db = malloc(sizeof(struct Database));
 	if (!conn->db) {
 		die("Memory error.");
 	}
 
+	// 
 	if (mode == 'c') {
-		conn->file = fopen(filename, "w"); // 
+		conn->file = fopen(filename, "w");  // 
 	} else {
 		conn->file = fopen(filename, "r+"); // 
 
@@ -104,34 +122,44 @@ struct Connection *Database_open(const char *filename, char mode)
 	return conn;
 }
 
+// Database_close will close the Database pointed to by conn.
+// Note: Anything that has had memory allocated for it will need to be freed!!!
+// ??? Reverse the order of freeing?
 void Database_close(struct Connection *conn)
 {
 	if (conn) {
 		if (conn->file) {
-			fclose(conn->file);
+			fclose(conn->file); // Flushes the stream, and also closes the underlying file
 		}
 		if (conn->db) {
-			free(conn->db);
+			free(conn->db);     // Free database
 		}
-		free(conn);
+		free(conn);             // Free the connection
 	}
 }
 
+// Database_write 
 void Database_write(struct Connection *conn)
 {
+	// rewind sets the file position indicator for the stream pointed to by (1) to the
+	// beginning of the file.
 	rewind(conn->file);
 
+	// fwrite writes to the stream specified by (4) from the location in memory specified
+	// by (1). (2) and (3) are the same as fread.
 	int rc = fwrite(conn->db, sizeof(struct Database), 1, conn->file);
 	if (rc != 1) {
 		die("Failed to write address.");
 	}
 
+	// fflush flushes the stream
 	rc = fflush(conn->file);
 	if (rc == -1) {
 		die("Cannot flush database");
 	}
 }
 
+// 
 void Database_create(struct Connection *conn)
 {
 	int i = 0;
@@ -144,6 +172,7 @@ void Database_create(struct Connection *conn)
 	}
 }
 
+// 
 void Database_set(struct Connection *conn, int id, const char *name, const char *email)
 {
 	struct Address *addr = &conn->db->rows[id];
@@ -165,6 +194,7 @@ void Database_set(struct Connection *conn, int id, const char *name, const char 
 	}
 }
 
+// 
 void Database_get(struct Connection *conn, int id)
 {
 	struct Address *addr = &conn->db->rows[id];
@@ -176,12 +206,14 @@ void Database_get(struct Connection *conn, int id)
 	}
 }
 
+// 
 void Database_delete(struct Connection *conn, int id)
 {
 	struct Address addr = { .id = id, .set = 0 };
 	conn->db->rows[id] = addr;
 }
 
+// 
 void Database_list(struct Connection *conn)
 {
 	int i = 0;
@@ -211,7 +243,7 @@ int main(int argc, char *argv[])
 		id = atoi(argv[3]);
 	}
 	if (id >= MAX_ROWS) {
-		die("There's not that many records");
+		die("There aren't that many records");
 	}
 
 	switch (action) {
