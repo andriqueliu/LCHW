@@ -124,7 +124,7 @@ struct Connection *Database_open(const char *filename, char mode)
 
 // Database_close will close the Database pointed to by conn.
 // Note: Anything that has had memory allocated for it will need to be freed!!!
-// ??? Reverse the order of freeing?
+// ??? Reverse the order of freeing? Break?
 void Database_close(struct Connection *conn)
 {
 	if (conn) {
@@ -138,7 +138,7 @@ void Database_close(struct Connection *conn)
 	}
 }
 
-// Database_write 
+// Database_write writes to 
 void Database_write(struct Connection *conn)
 {
 	// rewind sets the file position indicator for the stream pointed to by (1) to the
@@ -149,7 +149,7 @@ void Database_write(struct Connection *conn)
 	// by (1). (2) and (3) are the same as fread.
 	int rc = fwrite(conn->db, sizeof(struct Database), 1, conn->file);
 	if (rc != 1) {
-		die("Failed to write address.");
+		die("Failed to write address");
 	}
 
 	// fflush flushes the stream
@@ -159,7 +159,7 @@ void Database_write(struct Connection *conn)
 	}
 }
 
-// 
+// Database_create creates a Database, initializing Addresses
 void Database_create(struct Connection *conn)
 {
 	int i = 0;
@@ -168,13 +168,15 @@ void Database_create(struct Connection *conn)
 		// Make a prototype to initialize it
 		struct Address addr = { .id = i, .set = 0 };
 		// Then just assign it
-		conn->db->rows[i] = addr;
+		conn->db->rows[i] = addr; // You can set structs to each other == copying
 	}
 }
 
-// 
+// Database_set sets the Address in the Database found in conn, using the position id,
+// name, and email address.
 void Database_set(struct Connection *conn, int id, const char *name, const char *email)
 {
+	// Syntax: address of (conn... db... rows... position in the array)
 	struct Address *addr = &conn->db->rows[id];
 	if (addr->set) {
 		die("Already set, delete it first.");
@@ -194,7 +196,8 @@ void Database_set(struct Connection *conn, int id, const char *name, const char 
 	}
 }
 
-// 
+// Database_get prints out an Address's details using its position id in the Database
+// found using conn.
 void Database_get(struct Connection *conn, int id)
 {
 	struct Address *addr = &conn->db->rows[id];
@@ -206,11 +209,11 @@ void Database_get(struct Connection *conn, int id)
 	}
 }
 
-// 
+// Database_delete reinitializes/resets an Address in its Database.
 void Database_delete(struct Connection *conn, int id)
 {
 	struct Address addr = { .id = id, .set = 0 };
-	conn->db->rows[id] = addr;
+	conn->db->rows[id] = addr; // Again, assigning a struct to a struct
 }
 
 // 
