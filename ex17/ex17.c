@@ -11,9 +11,13 @@ go stack.
 
 Lots more details...
 
+Note: design patterns in creation and destruction... Easier to organize to use a create
+function that makes everything or not, and then a destroy function that frees everything
+
 Note: streams found in files
 
-Note: Check for null pointers/etc. by using if (!ptr), etc.
+Note: Check for null pointers/etc. by using if (!ptr), etc. Or you could use == NULL, but
+NULL evaluates to false anyway.
 
 Note: This program creates a file, from which Databases of user-defined information
 (in this case Address structs) can be stored and accessed 
@@ -74,11 +78,17 @@ void Address_print(struct Address *addr)
 }
 
 // Database_load loads a Database.
-// 
+// Inputs:
+// struct Connection pointer, used to refer to a Connection's linked file and Database.
 void Database_load(struct Connection *conn)
 {
 	// fread reads (3) items of data, each of size (2), from the stream pointed to by (4),
-	// and stores them into the location given by (1)
+	// and stores them into the location given by (1). This function allows us to access
+	// changes made to files, which we can access out of runtime (because of Database_write).
+	//
+	// fread returns the number of items written to or read from
+	// 
+	// rc is just used for error checking
 	int rc = fread(conn->db, sizeof(struct Database), 1, conn->file);
 	if (rc != 1) {
 		die("Failed to load database.");
@@ -88,7 +98,11 @@ void Database_load(struct Connection *conn)
 // Database_open creates a new Connection to a new Database, and also checks for errors
 // in this process.
 // This function allows the user to define their desired mode: 
-// 
+// c: Create a file
+// else: Can read from or write to a file
+// Inputs:
+// const char pointer filename, used to select file by name
+// char mode, used to select which mode of operation
 // Returns a pointer to a Connection
 struct Connection *Database_open(const char *filename, char mode)
 {
@@ -104,12 +118,12 @@ struct Connection *Database_open(const char *filename, char mode)
 		die("Memory error.");
 	}
 
-	// 
 	if (mode == 'c') {
-		conn->file = fopen(filename, "w");  // 
+		conn->file = fopen(filename, "w");  // w: writing
 	} else {
-		conn->file = fopen(filename, "r+"); // 
+		conn->file = fopen(filename, "r+"); // r+: Reading and Writing
 
+		// Is this step really necessary? Look below... 
 		if (conn->file) {
 			Database_load(conn);
 		}
@@ -128,6 +142,8 @@ struct Connection *Database_open(const char *filename, char mode)
 void Database_close(struct Connection *conn)
 {
 	if (conn) {
+		// These if statements: best practice... just in case for instance one part is missing,
+		// doesn't throw an error right away, etc.
 		if (conn->file) {
 			fclose(conn->file); // Flushes the stream, and also closes the underlying file
 		}
@@ -138,7 +154,10 @@ void Database_close(struct Connection *conn)
 	}
 }
 
-// Database_write writes to 
+// Database_write writes to the file from the Database. This function effectively allows 
+// us to write to a file and refer back to our changes later.
+// Inputs:
+// struct Connection pointer, used to refer to the Database
 void Database_write(struct Connection *conn)
 {
 	// rewind sets the file position indicator for the stream pointed to by (1) to the
@@ -249,11 +268,14 @@ int main(int argc, char *argv[])
 		die("There aren't that many records");
 	}
 
+	// Choose what to do based on action
 	switch (action) {
+		// Create a database
 		case 'c':
 			Database_create(conn);
 			Database_write(conn);
 			break;
+		// Get information (about one id)
 		case 'g':
 			if (argc != 4) {
 				die("Need an id to get");
@@ -261,6 +283,7 @@ int main(int argc, char *argv[])
 
 			Database_get(conn, id);
 			break;
+		// Set an id
 		case 's':
 			if (argc != 6) {
 				die("Need id, name, email to set");
@@ -269,6 +292,7 @@ int main(int argc, char *argv[])
 			Database_set(conn, id, argv[4], argv[5]);
 			Database_write(conn);
 			break;
+		// Delete an id
 		case 'd':
 			if (argc != 4) {
 				die("Need id to delete");
@@ -277,9 +301,11 @@ int main(int argc, char *argv[])
 			Database_delete(conn, id);
 			Database_write(conn);
 			break;
+		// List all ids
 		case 'l':
 			Database_list(conn);
 			break;
+		// !!! Removing default is fine, syntax wise.
 		default:
 			die("Invalid action: c=create, g=get, s=set, d=del, l=list");
 	}
