@@ -55,8 +55,9 @@ struct Connection {
 	struct Database *db;
 };
 
-// die is used to kill the program if there is anything wrong
-void die(const char *message)
+// die is used to kill the program if there is anything wrong.
+// Extra Credit: pass conn to this function, so die can close and clean up.
+void die(const char *message, struct Connection *conn)
 {
 	// When you have an error return from a function, it will usually set an external var.
 	// errno. Here, you see if errno is set, and perror the error message if it is set.
@@ -65,6 +66,15 @@ void die(const char *message)
 	} else {
 		printf("ERROR: %s\n", message);
 	}
+
+	// Copied from Database_close
+	if (conn->file) {
+		fclose(conn->file); // Flushes the stream, and also closes the underlying file
+	}
+	if (conn->db) {
+		free(conn->db);     // Free database
+	}
+	free(conn);             // Free the connection
 
 	exit(1); // Exit the program
 }
@@ -89,9 +99,10 @@ void Database_load(struct Connection *conn)
 	// fread returns the number of items written to or read from
 	// 
 	// rc is just used for error checking
+	// Break: removing random bytes in the file... this fails right away.
 	int rc = fread(conn->db, sizeof(struct Database), 1, conn->file);
 	if (rc != 1) {
-		die("Failed to load database.");
+		die("Failed to load database.", conn);
 	}
 }
 
@@ -109,13 +120,13 @@ struct Connection *Database_open(const char *filename, char mode)
 	// Create Connection pointer, points to a new Connection
 	struct Connection *conn = malloc(sizeof(struct Connection));
 	if (!conn) {
-		die("Memory error.");
+		die("Memory error.", conn);
 	}
 
 	// conn's db will point to a new Database
 	conn->db = malloc(sizeof(struct Database));
 	if (!conn->db) {
-		die("Memory error.");
+		die("Memory error.", conn);
 	}
 
 	if (mode == 'c') {
@@ -130,7 +141,7 @@ struct Connection *Database_open(const char *filename, char mode)
 	}
 
 	if (!conn->file) {
-		die("Failed to open the file.");
+		die("Failed to open the file.", conn);
 	}
 
 	return conn;
@@ -168,13 +179,13 @@ void Database_write(struct Connection *conn)
 	// by (1). (2) and (3) are the same as fread.
 	int rc = fwrite(conn->db, sizeof(struct Database), 1, conn->file);
 	if (rc != 1) {
-		die("Failed to write address");
+		die("Failed to write address", conn);
 	}
 
 	// fflush flushes the stream
 	rc = fflush(conn->file);
 	if (rc == -1) {
-		die("Cannot flush database");
+		die("Cannot flush database", conn);
 	}
 }
 
@@ -198,20 +209,23 @@ void Database_set(struct Connection *conn, int id, const char *name, const char 
 	// Syntax: address of (conn... db... rows... position in the array)
 	struct Address *addr = &conn->db->rows[id];
 	if (addr->set) {
-		die("Already set, delete it first.");
+		die("Already set, delete it first.", conn);
 	}
 
 	addr->set = 1;
 	// WARNING: bug, read the "How to break it" and fix this
 	char *res = strncpy(addr->name, name, MAX_DATA);
 	// Demonstrate the strncpy bug
+	// Fix: add a null terminator at the end, because strncpy will NOT do this if src is greater
+	// than dst.
+	res[MAX_DATA - 1] = '\0';
 	if (!res) {
-		die("Email copy failed.");
+		die("Email copy failed.", conn);
 	}
 
 	res = strncpy(addr->email, email, MAX_DATA);
 	if (!res) {
-		die("Email copy failed");
+		die("Email copy failed", conn);
 	}
 }
 
@@ -224,7 +238,7 @@ void Database_get(struct Connection *conn, int id)
 	if (addr->set) {
 		Address_print(addr);
 	} else {
-		die("ID is not set");
+		die("ID is not set", conn);
 	}
 }
 
@@ -252,8 +266,9 @@ void Database_list(struct Connection *conn)
 
 int main(int argc, char *argv[])
 {
+	// ??? NULL to be passed in???
 	if (argc < 3) {
-		die("USAGE: ex17 <dbfile> <action> [action params]");
+		die("USAGE: ex17 <dbfile> <action> [action params]", NULL);
 	}
 
 	char *filename = argv[1];
@@ -265,7 +280,7 @@ int main(int argc, char *argv[])
 		id = atoi(argv[3]);
 	}
 	if (id >= MAX_ROWS) {
-		die("There aren't that many records");
+		die("There aren't that many records", conn);
 	}
 
 	// Choose what to do based on action
@@ -278,7 +293,7 @@ int main(int argc, char *argv[])
 		// Get information (about one id)
 		case 'g':
 			if (argc != 4) {
-				die("Need an id to get");
+				die("Need an id to get", conn);
 			}
 
 			Database_get(conn, id);
@@ -286,7 +301,7 @@ int main(int argc, char *argv[])
 		// Set an id
 		case 's':
 			if (argc != 6) {
-				die("Need id, name, email to set");
+				die("Need id, name, email to set", conn);
 			}
 
 			Database_set(conn, id, argv[4], argv[5]);
@@ -295,7 +310,7 @@ int main(int argc, char *argv[])
 		// Delete an id
 		case 'd':
 			if (argc != 4) {
-				die("Need id to delete");
+				die("Need id to delete", conn);
 			}
 
 			Database_delete(conn, id);
@@ -307,7 +322,7 @@ int main(int argc, char *argv[])
 			break;
 		// !!! Removing default is fine, syntax wise.
 		default:
-			die("Invalid action: c=create, g=get, s=set, d=del, l=list");
+			die("Invalid action: c=create, g=get, s=set, d=del, l=list", conn);
 	}
 
 	Database_close(conn);
