@@ -66,7 +66,7 @@ void die(const char *message, struct Connection *conn)
 	} else {
 		printf("ERROR: %s\n", message);
 	}
-
+	
 	// Copied from Database_close
 	if (conn->file) {
 		fclose(conn->file); // Flushes the stream, and also closes the underlying file
@@ -75,6 +75,7 @@ void die(const char *message, struct Connection *conn)
 		free(conn->db);     // Free database
 	}
 	free(conn);             // Free the connection
+
 
 	exit(1); // Exit the program
 }
@@ -266,7 +267,6 @@ void Database_list(struct Connection *conn)
 
 int main(int argc, char *argv[])
 {
-	// ??? NULL to be passed in???
 	if (argc < 3) {
 		die("USAGE: ex17 <dbfile> <action> [action params]", NULL);
 	}
